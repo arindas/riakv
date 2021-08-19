@@ -3,6 +3,17 @@ name = "riakv"
 version = "0.1.0"
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+byteorder = "1.2"
+crc = "1.7"
+serde = "1"
+serde_derive = "1"
+serde_json = "1"
+
+[lib]
+name = "libriakv"
+path = "src/lib.rs"
+
+[[bin]]
+name = "riakv_mem"
+path = "src/riakv_mem.rs"
