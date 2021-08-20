@@ -21,26 +21,49 @@ pub struct KeyValuePair {
 }
 
 #[derive(Debug)]
-pub struct RiaKV {
-    f: File,
-
-    /// Index storing a mapping from
-    /// bytestrings to location in file.
+pub struct RiaKV<F>
+where
+    F: Read + Write + Seek,
+{
+    f: F,
     pub index: HashMap<ByteString, u64>,
 }
 
-impl RiaKV {
-    pub fn open(path: &Path) -> io::Result<Self> {
+pub enum IndexOp {
+    Insert,
+    Delete,
+    Nop,
+}
+
+impl RiaKV<File> {
+    pub fn open_from_file_at_path(path: &Path) -> io::Result<Self> {
         let f = OpenOptions::new()
             .read(true)
             .write(true)
             .create(true)
             .append(true)
             .open(path)?;
-        let index = HashMap::new();
-        Ok(RiaKV { f, index })
-    }
 
+        Ok(RiaKV {
+            f: f,
+            index: HashMap::new(),
+        })
+    }
+}
+
+impl RiaKV<io::Cursor<Vec<u8>>> {
+    pub fn open_from_in_memory_buffer(capacity: usize) -> Self {
+        RiaKV {
+            f: io::Cursor::new(vec![0; capacity]),
+            index: HashMap::new(),
+        }
+    }
+}
+
+impl<F> RiaKV<F>
+where
+    F: Read + Write + Seek,
+{
     fn process_record<R: Read>(f: &mut R) -> io::Result<KeyValuePair> {
         let saved_checksum = f.read_u32::<LittleEndian>()?;
         let key_len = f.read_u32::<LittleEndian>()?;
@@ -74,13 +97,16 @@ impl RiaKV {
         self.f.seek(SeekFrom::End(0))
     }
 
-    pub fn load(&mut self) -> io::Result<()> {
+    pub fn for_each_kv_entry_in_storage<Func>(&mut self, mut callback: Func) -> io::Result<()>
+    where
+        Func: FnMut(&KeyValuePair, u64) -> IndexOp,
+    {
         let mut f = BufReader::new(&mut self.f);
 
         loop {
             let position = f.seek(SeekFrom::Current(0))?;
 
-            let maybe_kv = RiaKV::process_record(&mut f);
+            let maybe_kv = RiaKV::<F>::process_record(&mut f);
 
             let kv = match maybe_kv {
                 Ok(kv) => kv,
@@ -93,16 +119,28 @@ impl RiaKV {
                 },
             };
 
-            self.index.insert(kv.key, position);
+            match callback(&kv, position) {
+                IndexOp::Insert => {
+                    self.index.insert(kv.key, position);
+                }
+                IndexOp::Delete => {
+                    self.index.remove(&kv.key);
+                }
+                IndexOp::Nop => {}
+            }
         }
 
         Ok(())
     }
 
+    pub fn load(&mut self) -> io::Result<()> {
+        self.for_each_kv_entry_in_storage(|_kv, _position| IndexOp::Insert)
+    }
+
     pub fn get_at(&mut self, position: u64) -> io::Result<KeyValuePair> {
         let mut f = BufReader::new(&mut self.f);
         f.seek(SeekFrom::Start(position))?;
-        let kv = RiaKV::process_record(&mut f)?;
+        let kv = RiaKV::<F>::process_record(&mut f)?;
 
         Ok(kv)
     }
@@ -116,6 +154,20 @@ impl RiaKV {
         let kv = self.get_at(position)?;
 
         Ok(Some(kv.value))
+    }
+
+    pub fn find(&mut self, target: &ByteStr) -> io::Result<Option<(u64, ByteString)>> {
+        let mut found: Option<(u64, ByteString)> = None;
+
+        self.for_each_kv_entry_in_storage(|kv, position| {
+            if kv.key == target {
+                found = Some((position, kv.value.clone()));
+            }
+
+            IndexOp::Nop
+        })?;
+
+        Ok(found)
     }
 
     pub fn insert_but_ignore_index(&mut self, key: &ByteStr, value: &ByteStr) -> io::Result<u64> {
@@ -150,6 +202,16 @@ impl RiaKV {
 
         self.index.insert(key.to_vec(), position);
         Ok(())
+    }
+
+    #[inline]
+    pub fn update(&mut self, key: &ByteStr, value: &ByteStr) -> io::Result<()> {
+        self.insert(key, value)
+    }
+
+    #[inline]
+    pub fn delete(&mut self, key: &ByteStr) -> io::Result<()> {
+        self.insert(key, b"")
     }
 }
 
