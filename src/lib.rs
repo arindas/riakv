@@ -203,9 +203,7 @@ where
         }
 
         let checksum = crc::crc32::checksum_ieee(&tmp);
-        // let next_byte = SeekFrom::End(0);
         let current_position = f.seek(SeekFrom::Current(0))?;
-        // f.seek(next_byte)?;
 
         f.write_u32::<LittleEndian>(checksum)?;
         f.write_u32::<LittleEndian>(key_len as u32)?;
