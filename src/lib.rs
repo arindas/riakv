@@ -185,9 +185,9 @@ where
         }
 
         let checksum = crc::crc32::checksum_ieee(&tmp);
-        let next_byte = SeekFrom::End(0);
+        // let next_byte = SeekFrom::End(0);
         let current_position = f.seek(SeekFrom::Current(0))?;
-        f.seek(next_byte)?;
+        // f.seek(next_byte)?;
 
         f.write_u32::<LittleEndian>(checksum)?;
         f.write_u32::<LittleEndian>(key_len as u32)?;
@@ -217,8 +217,82 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::RiaKV;
+
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn insert() {
+        let mut store = RiaKV::open_from_in_memory_buffer(5000);
+        store.insert(b"key", b"value").expect("insert");
+    }
+
+    #[test]
+    fn insert_get() {
+        let mut store = RiaKV::open_from_in_memory_buffer(5000);
+
+        let kv_pairs = [
+            (b"12345", b"1qwerrtyui"),
+            (b"asdef", b"1zxcvnnnqq"),
+            (b"1asdf", b"qwertynnii"),
+            (b"1zxcv", b"1lllllpppq"),
+            (b"qwert", b"1zxcqqqqee"),
+            (b"abjkl", b"1aassddwww"),
+            (b"nmkli", b"1qaazzssqq"),
+            (b"asdff", b"1ppppkkkkq"),
+        ];
+
+        for kv in kv_pairs {
+            store.insert(kv.0, kv.1).expect("insert");
+        }
+
+        for kv in kv_pairs {
+            let value = store.get(kv.0).expect("get").unwrap();
+            assert_eq!(value, kv.1.to_vec());
+        }
+    }
+
+    #[test]
+    fn update_get() {
+        let mut store = RiaKV::open_from_in_memory_buffer(5000);
+
+        let kv_pairs = [
+            (b"12345", b"1qwerrtyui_1"),
+            (b"asdef", b"1zxcvnnnqq_1"),
+            (b"1asdf", b"qwertynnii_1"),
+            (b"1zxcv", b"1lllllpppq_1"),
+            (b"qwert", b"1zxcqqqqee_1"),
+            (b"abjkl", b"1aassddwww_1"),
+            (b"nmkli", b"1qaazzssqq_1"),
+            (b"asdff", b"1ppppkkkkq_1"),
+            (b"asdef", b"1zxcvnnnqq_2"),
+            (b"1asdf", b"qwertynnii_2"),
+            (b"1zxcv", b"1lllllpppq_2"),
+            (b"abjkl", b"1aassddwww_2"),
+            (b"asdef", b"1zxcvnnnqq_3"),
+            (b"1zxcv", b"1lllllpppq_3"),
+            (b"asdff", b"1ppppkkkkq_3"),
+            (b"nmkli", b"1qaazzssqq_4"),
+            (b"asdef", b"1zxcvnnnqq_4"),
+            (b"asdef", b"1zxcvnnnqq_4"),
+        ];
+
+        let final_kv_pairs = [
+            (b"12345", b"1qwerrtyui_1"),
+            (b"asdef", b"1zxcvnnnqq_4"),
+            (b"1asdf", b"qwertynnii_2"),
+            (b"1zxcv", b"1lllllpppq_3"),
+            (b"qwert", b"1zxcqqqqee_1"),
+            (b"abjkl", b"1aassddwww_2"),
+            (b"nmkli", b"1qaazzssqq_4"),
+            (b"asdff", b"1ppppkkkkq_3"),
+        ];
+
+        for kv in kv_pairs {
+            store.update(kv.0, kv.1).expect("update");
+        }
+
+        for kv in final_kv_pairs {
+            let value = store.get(kv.0).expect("get").unwrap();
+            assert_eq!(value, kv.1.to_vec());
+        }
     }
 }
