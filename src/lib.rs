@@ -32,6 +32,7 @@ where
 pub enum IndexOp {
     Insert(KeyValuePair, u64),
     Delete(KeyValuePair, u64),
+    End,
     Nop,
 }
 
@@ -102,6 +103,8 @@ where
         Func: FnMut(KeyValuePair, u64) -> IndexOp,
     {
         let mut f = BufReader::new(&mut self.f);
+        let previous_position = f.seek(SeekFrom::Current(0))?;
+        f.seek(SeekFrom::Start(0))?;
 
         loop {
             let position = f.seek(SeekFrom::Current(0))?;
@@ -127,14 +130,24 @@ where
                     self.index.remove(&kv.key);
                 }
                 IndexOp::Nop => {}
+                IndexOp::End => {
+                    break;
+                }
             }
         }
+        f.seek(SeekFrom::Start(previous_position))?;
 
         Ok(())
     }
 
     pub fn load(&mut self) -> io::Result<()> {
-        self.for_each_kv_entry_in_storage(|kv, position| IndexOp::Insert(kv, position))
+        self.for_each_kv_entry_in_storage(|kv, position| {
+            if kv.value.len() > 0 {
+                IndexOp::Insert(kv, position)
+            } else {
+                IndexOp::Delete(kv, position)
+            }
+        })
     }
 
     pub fn get_at(&mut self, position: u64) -> io::Result<KeyValuePair> {
@@ -153,18 +166,23 @@ where
 
         let kv = self.get_at(position)?;
 
-        Ok(Some(kv.value))
+        if kv.value.len() > 0 {
+            Ok(Some(kv.value))
+        } else {
+            Ok(None)
+        }
     }
 
     pub fn find(&mut self, target: &ByteStr) -> io::Result<Option<(u64, ByteString)>> {
         let mut found: Option<(u64, ByteString)> = None;
 
         self.for_each_kv_entry_in_storage(|kv, position| {
-            if kv.key == target {
+            if kv.key == target.to_vec() {
                 found = Some((position, kv.value));
+                IndexOp::End
+            } else {
+                IndexOp::Nop
             }
-
-            IndexOp::Nop
         })?;
 
         Ok(found)
@@ -293,6 +311,78 @@ mod tests {
         for kv in final_kv_pairs {
             let value = store.get(kv.0).expect("get").unwrap();
             assert_eq!(value, kv.1.to_vec());
+        }
+    }
+
+    #[test]
+    fn delete() {
+        let mut store = RiaKV::open_from_in_memory_buffer(5000);
+
+        let kv_pairs = [
+            (b"12345", b"1qwerrtyui"),
+            (b"asdef", b"1zxcvnnnqq"),
+            (b"1asdf", b"qwertynnii"),
+            (b"1zxcv", b"1lllllpppq"),
+            (b"qwert", b"1zxcqqqqee"),
+            (b"abjkl", b"1aassddwww"),
+            (b"nmkli", b"1qaazzssqq"),
+            (b"asdff", b"1ppppkkkkq"),
+        ];
+
+        for kv in kv_pairs {
+            store.insert(kv.0, kv.1).expect("insert");
+        }
+
+        let kv_pairs_to_delete = [
+            (b"abjkl", b"1aassddwww"),
+            (b"nmkli", b"1qaazzssqq"),
+            (b"asdff", b"1ppppkkkkq"),
+        ];
+
+        let kv_pairs_untouched = [
+            (b"12345", b"1qwerrtyui"),
+            (b"asdef", b"1zxcvnnnqq"),
+            (b"1asdf", b"qwertynnii"),
+            (b"1zxcv", b"1lllllpppq"),
+            (b"qwert", b"1zxcqqqqee"),
+        ];
+
+        for kv in kv_pairs_to_delete {
+            store.delete(kv.0).expect("delete");
+        }
+
+        for kv in kv_pairs_untouched {
+            let value = store.get(kv.0).expect("get").unwrap();
+            assert_eq!(value, kv.1.to_vec());
+        }
+
+        for kv in kv_pairs_to_delete {
+            let value = store.get(kv.0).expect("get");
+            assert_eq!(value, None);
+        }
+    }
+
+    #[test]
+    fn find() {
+        let mut store = RiaKV::open_from_in_memory_buffer(5000);
+
+        let kv_pairs = [
+            (b"12345", b"1qwerrtyui"),
+            (b"asdef", b"1zxcvnnnqq"),
+            (b"1asdf", b"qwertynnii"),
+            (b"1zxcv", b"1lllllpppq"),
+            (b"qwert", b"1zxcqqqqee"),
+            (b"abjkl", b"1aassddwww"),
+            (b"nmkli", b"1qaazzssqq"),
+            (b"asdff", b"1ppppkkkkq"),
+        ];
+
+        for kv in kv_pairs {
+            store.insert(kv.0, kv.1).expect("insert");
+        }
+
+        for kv in kv_pairs {
+            store.find(kv.0).expect("find").unwrap();
         }
     }
 }
