@@ -1,6 +1,6 @@
 # `riakv`
 
-Log structured key value store implementation from https://www.manning.com/books/rust-in-action with some enhancements.
+Log structured, append only, key value store implementation from https://www.manning.com/books/rust-in-action with some enhancements.
 
 ## Features
 
