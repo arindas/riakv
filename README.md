@@ -120,5 +120,12 @@ pub fn find(&mut self, target: &ByteStr) -> io::Result<Option<(u64, ByteString)>
 ## Building
 
 After cloning the repository, simply run `cargo build --release` from the project root. This project
-provides two binaries `riakv_mem` and `riakv_disk`. The _* suffix specifies whether the index is
+provides two binaries `riakv_mem` and `riakv_disk`. The `_*` suffix specifies whether the index is
 persisted in the disk or not.
+
+# License
+
+`riakv` is licensed under the MIT License See [LICENSE](./LICENSE) for the full license text.
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Farindas%2Friakv.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Farindas%2Friakv?ref=badge_large)
+
