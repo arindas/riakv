@@ -152,30 +152,6 @@ where
         })
     }
 
-    pub fn load_index<R: Read>(
-        &mut self,
-        index_file: &mut R,
-    ) -> result::Result<(), bincode::Error> {
-        let reader = BufReader::new(index_file);
-
-        match bincode::deserialize_from(reader) {
-            Ok(index) => {
-                self.index = index;
-                Ok(())
-            }
-            Err(value) => Err(value),
-        }
-    }
-
-    pub fn persist_index<W: Write>(
-        &self,
-        index_file: &mut W,
-    ) -> result::Result<(), bincode::Error> {
-        let writer = BufWriter::new(index_file);
-
-        bincode::serialize_into(writer, &self.index)
-    }
-
     pub fn get_at(&mut self, position: u64) -> io::Result<KeyValuePair> {
         let mut f = BufReader::new(&mut self.f);
         f.seek(SeekFrom::Start(position))?;
@@ -254,6 +230,35 @@ where
     #[inline]
     pub fn delete(&mut self, key: &ByteStr) -> io::Result<()> {
         self.insert(key, b"")
+    }
+}
+
+impl<F> RiaKV<F>
+where
+    F: Read + Write + Seek,
+{
+    pub fn load_index<R: Read>(
+        &mut self,
+        index_file: &mut R,
+    ) -> result::Result<(), bincode::Error> {
+        let reader = BufReader::new(index_file);
+
+        match bincode::deserialize_from(reader) {
+            Ok(index) => {
+                self.index = index;
+                Ok(())
+            }
+            Err(value) => Err(value),
+        }
+    }
+
+    pub fn persist_index<W: Write>(
+        &self,
+        index_file: &mut W,
+    ) -> result::Result<(), bincode::Error> {
+        let writer = BufWriter::new(index_file);
+
+        bincode::serialize_into(writer, &self.index)
     }
 }
 
