@@ -125,7 +125,7 @@ persisted in the disk or not.
 
 # License
 
-`riakv` is licensed under the MIT License See [LICENSE](./LICENSE) for the full license text.
+`riakv` is licensed under the MIT License. See [LICENSE](./LICENSE) for the full license text.
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Farindas%2Friakv.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Farindas%2Friakv?ref=badge_large)
 
