@@ -362,5 +362,5 @@ mod tests {
         for kv in kv_pairs {
             store.find(kv.0).expect("find").unwrap();
         }
-    } 
+    }
 }
