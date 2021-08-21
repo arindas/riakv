@@ -4,9 +4,9 @@ Log structured, append only, key value store implementation from https://www.man
 
 ## Features
 
-- `[x]` Persitent key value store with a hash table index
-- `[x]` Optionally, persitent index for fast loading
-- `[x]` Exhaustive, comprehensive tests
+- [x] Persitent key value store with a hash table index
+- [x] Optionally, persitent index for fast loading
+- [x] Exhaustive, comprehensive tests
 
 ## Design enhancements
 
