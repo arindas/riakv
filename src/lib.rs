@@ -30,8 +30,8 @@ where
 }
 
 pub enum IndexOp {
-    Insert,
-    Delete,
+    Insert(KeyValuePair, u64),
+    Delete(KeyValuePair, u64),
     Nop,
 }
 
@@ -99,7 +99,7 @@ where
 
     pub fn for_each_kv_entry_in_storage<Func>(&mut self, mut callback: Func) -> io::Result<()>
     where
-        Func: FnMut(&KeyValuePair, u64) -> IndexOp,
+        Func: FnMut(KeyValuePair, u64) -> IndexOp,
     {
         let mut f = BufReader::new(&mut self.f);
 
@@ -119,11 +119,11 @@ where
                 },
             };
 
-            match callback(&kv, position) {
-                IndexOp::Insert => {
+            match callback(kv, position) {
+                IndexOp::Insert(kv, position) => {
                     self.index.insert(kv.key, position);
                 }
-                IndexOp::Delete => {
+                IndexOp::Delete(kv, _) => {
                     self.index.remove(&kv.key);
                 }
                 IndexOp::Nop => {}
@@ -134,7 +134,7 @@ where
     }
 
     pub fn load(&mut self) -> io::Result<()> {
-        self.for_each_kv_entry_in_storage(|_kv, _position| IndexOp::Insert)
+        self.for_each_kv_entry_in_storage(|kv, position| IndexOp::Insert(kv, position))
     }
 
     pub fn get_at(&mut self, position: u64) -> io::Result<KeyValuePair> {
@@ -161,7 +161,7 @@ where
 
         self.for_each_kv_entry_in_storage(|kv, position| {
             if kv.key == target {
-                found = Some((position, kv.value.clone()));
+                found = Some((position, kv.value));
             }
 
             IndexOp::Nop
