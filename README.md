@@ -1,6 +1,7 @@
 # `riakv`
 [![ci-tests](https://github.com/arindas/riakv/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/arindas/riakv/actions/workflows/ci-tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Farindas%2Friakv.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Farindas%2Friakv?ref=badge_shield)
  
 Log structured, append only, key value store implementation from [Rust In Action](https://www.manning.com/books/rust-in-action) with some enhancements.
 
@@ -122,3 +123,7 @@ pub fn find(&mut self, target: &ByteStr) -> io::Result<Option<(u64, ByteString)>
 After cloning the repository, simply run `cargo build --release` from the project root. This project
 provides two binaries `riakv_mem` and `riakv_disk`. The _* suffix specifies whether the index is
 persisted in the disk or not.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Farindas%2Friakv.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Farindas%2Friakv?ref=badge_large)
