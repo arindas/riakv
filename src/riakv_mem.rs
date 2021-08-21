@@ -2,6 +2,8 @@ use libriakv::RiaKV;
 
 #[cfg(target_os = "windows")]
 const USAGE: &str = "
+CLI client for RiaKV key value store.
+
 Usage:
     riakv_mem.exe FILE get KEY
     riakv_mem.exe FILE delete KEY
@@ -11,6 +13,8 @@ Usage:
 
 #[cfg(target_os = "linux")]
 const USAGE: &str = "
+CLI client for RiaKV key value store.
+
 Usage:
     riakv_mem FILE get KEY
     riakv_mem FILE delete KEY

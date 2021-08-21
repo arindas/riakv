@@ -6,6 +6,8 @@ use std::path::Path;
 
 #[cfg(target_os = "windows")]
 const USAGE: &str = "
+CLI client for RiaKV key value store with persistent index.
+
 Usage:
     riakv_mem.exe STORAGE_FILE INDEX_FILE get KEY
     riakv_mem.exe STORAGE_FILE INDEX_FILE delete KEY
@@ -15,6 +17,8 @@ Usage:
 
 #[cfg(target_os = "linux")]
 const USAGE: &str = "
+CLI client for RiaKV key value store with persistent index.
+
 Usage:
     riakv_mem STORAGE_FILE INDEX_FILE get KEY
     riakv_mem STORAGE_FILE INDEX_FILE delete KEY
