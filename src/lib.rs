@@ -313,7 +313,7 @@ mod tests {
     }
 
     #[test]
-    fn delete() {
+    fn delete_and_find() {
         let mut store = RiaKV::open_from_in_memory_buffer(5000);
 
         let kv_pairs = [
@@ -358,29 +358,9 @@ mod tests {
             let value = store.get(kv.0).expect("get");
             assert_eq!(value, None);
         }
-    }
-
-    #[test]
-    fn find() {
-        let mut store = RiaKV::open_from_in_memory_buffer(5000);
-
-        let kv_pairs = [
-            (b"12345", b"1qwerrtyui"),
-            (b"asdef", b"1zxcvnnnqq"),
-            (b"1asdf", b"qwertynnii"),
-            (b"1zxcv", b"1lllllpppq"),
-            (b"qwert", b"1zxcqqqqee"),
-            (b"abjkl", b"1aassddwww"),
-            (b"nmkli", b"1qaazzssqq"),
-            (b"asdff", b"1ppppkkkkq"),
-        ];
-
-        for kv in kv_pairs {
-            store.insert(kv.0, kv.1).expect("insert");
-        }
 
         for kv in kv_pairs {
             store.find(kv.0).expect("find").unwrap();
         }
-    }
+    } 
 }
