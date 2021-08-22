@@ -7,6 +7,7 @@ Log structured, append only, key value store implementation from [Rust In Action
 ## Features
 
 - [x] Persitent key value store with a hash table index
+- [x] `crc32` checksum validation for every key value pair stored.
 - [x] Optionally, persitent index for fast loading
 - [x] Exhaustive, comprehensive tests
 
@@ -40,7 +41,7 @@ impl RiaKV<io::Cursor<Vec<u8>>> {
 ### Refactors in iteration over key value pairs stored in file
 Instead of duplicating iteration code in `RiaKV::find` and `RiaKV::load`, we refactor the loop
 into `RiaKV::for_each`. This method accepts a callback to operate on the key value pair
-received in every iteration. Finally, the callback returns an enum which specified how to
+received in every iteration. Finally, the callback returns an enum which specifies how to
 update the store hashtable index using the key value pair.
 
 This is implemented as follows. First, we have an index operation type:
