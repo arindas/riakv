@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["libriakv","riakv_disk","riakv_mem"];
