@@ -114,10 +114,10 @@ where
 {
     /// Processes a record from the current position in the underlying storage file.
     /// Every record (key value pair) is stored with the following layout:
-    /// ```
-    /// // ┌────────────────┬────────────┬──────────────┬────────────────┐
-    /// // │ crc32 checksum │ key length │ value length │ KeyValuePair{} │
-    /// // └────────────────┴────────────┴──────────────┴────────────────┘
+    /// ```text
+    /// ┌────────────────┬────────────┬──────────────┬────────────────┐
+    /// │ crc32 checksum │ key length │ value length │ KeyValuePair{} │
+    /// └────────────────┴────────────┴──────────────┴────────────────┘
     /// ```
     ///
     /// Reading a record from the underlying storage occurs in the following steps:
@@ -358,10 +358,10 @@ where
     /// in the underlying storage file, it was written at. The index is not updated.
     ///
     /// As mentioned before, the following layout is used for storing the key value pair:
-    /// ```
-    /// // ┌────────────────┬────────────┬──────────────┬────────────────┐
-    /// // │ crc32 checksum │ key length │ value length │ KeyValuePair{} │
-    /// // └────────────────┴────────────┴──────────────┴────────────────┘
+    /// ```text
+    /// ┌────────────────┬────────────┬──────────────┬────────────────┐
+    /// │ crc32 checksum │ key length │ value length │ KeyValuePair{} │
+    /// └────────────────┴────────────┴──────────────┴────────────────┘
     /// ```
     ///
     /// This method is intended to be used in the actual `RiaKV::insert()` implementation.
