@@ -1,7 +1,7 @@
 //!# `riakv`
 //![![ci-tests](https://github.com/arindas/riakv/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/arindas/riakv/actions/workflows/ci-tests.yml)
-//![![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 //![![rustdoc](https://github.com/arindas/riakv/actions/workflows/rustdoc.yml/badge.svg)](https://github.com/arindas/riakv/actions/workflows/rustdoc.yml)
+//![![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 //! 
 //!Log structured, append only, key value store implementation from [Rust In Action](https://www.manning.com/books/rust-in-action) with some enhancements.
 //!
