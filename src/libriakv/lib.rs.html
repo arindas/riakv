@@ -605,12 +605,14 @@
 <span id="603">603</span>
 <span id="604">604</span>
 <span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
 </pre><pre class="rust">
-<span class="doccomment">//!# `riakv`</span>
+<span class="doccomment">//!# riakv</span>
 <span class="doccomment">//![![ci-tests](https://github.com/arindas/riakv/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/arindas/riakv/actions/workflows/ci-tests.yml)</span>
 <span class="doccomment">//![![rustdoc](https://github.com/arindas/riakv/actions/workflows/rustdoc.yml/badge.svg)](https://github.com/arindas/riakv/actions/workflows/rustdoc.yml)</span>
 <span class="doccomment">//![![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//!Log structured, append only, key value store implementation from [Rust In Action](https://www.manning.com/books/rust-in-action) with some enhancements.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//!## Features</span>
@@ -649,14 +651,17 @@
 
 <span class="doccomment">/// Generic representation of a key value store in `libriakv`</span>
 <span class="doccomment">/// The underlying storage can be any type with the `Read + Write + Seek` trait bounds.</span>
-<span class="doccomment">/// The `index` attribute is used to maintain a mapping from the key value pairs to the</span>
-<span class="doccomment">/// position at which they are stored in the backing storage file.</span>
+<span class="doccomment">/// The `index` attribute is used to maintain a mapping from keys to the</span>
+<span class="doccomment">/// position in the underlying storage where their corresponding entries are stored.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RiaKV</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Read</span> <span class="op">+</span> <span class="ident">Write</span> <span class="op">+</span> <span class="ident">Seek</span>,
 {
+    <span class="doccomment">/// underlying storage</span>
     <span class="ident">f</span>: <span class="ident">F</span>,
+
+    <span class="doccomment">/// index - storing a mapping from keys to the position where the key value entry is stored</span>
     <span class="kw">pub</span> <span class="ident">index</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">ByteString</span>, <span class="ident">u64</span><span class="op">&gt;</span>,
 }
 
@@ -678,7 +683,7 @@
     <span class="doccomment">/// use libriakv::RiaKV;</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// let storage_path = std::path::Path::new(&quot;/path/to/some/file.db&quot;);</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// match RiaKV::open_from_file_at_path(storage_path) {</span>
     <span class="doccomment">///     Ok(opened_store) =&gt; {}, // use the opened store</span>
     <span class="doccomment">///     _ =&gt; {} // handle failure</span>
@@ -735,7 +740,7 @@
     <span class="doccomment">/// - Read the next (key length + value length) bytes into a bytestring</span>
     <span class="doccomment">/// - Verify that the crc32 checksum of the data Bytestring read matches with the crc32</span>
     <span class="doccomment">/// checksum read</span>
-    <span class="doccomment">/// - Split of the bytestring at key length from the start to obtain the key and the value</span>
+    <span class="doccomment">/// - Split off the bytestring at key length from the start to obtain the key and the value</span>
     <span class="doccomment">/// - Return `KeyValuePair { key, value }`</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Example</span>
@@ -746,7 +751,7 @@
     <span class="doccomment">/// let mut cursor = io::Cursor::new(vec![0; 5000]);</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// // .. enter some data into the cursor</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// let maybe_kv = RiaKV::&lt;io::Cursor&lt;Vec&lt;u8&gt;&gt;&gt;::process_record(&amp;mut cursor);</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">process_record</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">Read</span><span class="op">&gt;</span>(<span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">KeyValuePair</span><span class="op">&gt;</span> {
@@ -778,7 +783,7 @@
         <span class="prelude-val">Ok</span>(<span class="ident">KeyValuePair</span> { <span class="ident">key</span>, <span class="ident">value</span> })
     }
 
-    <span class="doccomment">/// Seeks to the end of the underlying storage file. Any subsequent read should end in EOF.</span>
+    <span class="doccomment">/// Seeks to the end of the underlying storage file. Any subsequent read should end in `EOF`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">seek_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">f</span>.<span class="ident">seek</span>(<span class="ident">SeekFrom::End</span>(<span class="number">0</span>))
     }
@@ -788,7 +793,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// The key value entries are processed in the following way:</span>
     <span class="doccomment">/// - First we backup the current position of the underlying storage since it would otherwise</span>
-    <span class="doccomment">/// be lost during scanning the entire storafge file</span>
+    <span class="doccomment">/// be lost during scanning the entire storage file</span>
     <span class="doccomment">/// - Next we seek to the start of the storage file</span>
     <span class="doccomment">/// - Now in an infinite loop, during every iteration</span>
     <span class="doccomment">///     - We seek to the current position</span>
@@ -796,16 +801,16 @@
     <span class="doccomment">///     - If the record read is not an error, we operate on it using the callback</span>
     <span class="doccomment">///     - In the case of an error</span>
     <span class="doccomment">///         - For simple EOF we break out of the loop</span>
-    <span class="doccomment">///         - In the case of any other error, we return Err(err)</span>
+    <span class="doccomment">///         - In the case of any other error, we return `Err(err)`</span>
     <span class="doccomment">/// - Now if the callback is executed, the return value is used as follows:</span>
-    <span class="doccomment">///     - For IndexOp::Insert the key value pair is inserted into the index</span>
-    <span class="doccomment">///     - For IndexOp::Delete the key value pair is deleted from the index if it existed in the</span>
+    <span class="doccomment">///     - For `IndexOp::Insert` the key value pair is inserted into the index</span>
+    <span class="doccomment">///     - For `IndexOp::Delete` the key value pair is deleted from the index if it existed in the</span>
     <span class="doccomment">///     index before</span>
-    <span class="doccomment">///     - For Index::Nop we do nothing a continue to the next iteration</span>
-    <span class="doccomment">///     - For Index::End we break out of the loop</span>
+    <span class="doccomment">///     - For `Index::Nop` we do nothing a continue to the next iteration</span>
+    <span class="doccomment">///     - For `Index::End` we break out of the loop</span>
     <span class="doccomment">/// - When we exit from the loop, we seek back to the position we saved before entering into</span>
     <span class="doccomment">/// the loop</span>
-    <span class="doccomment">/// - We return Ok(())</span>
+    <span class="doccomment">/// - We return `Ok(())`</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Example</span>
     <span class="doccomment">///</span>
@@ -815,7 +820,7 @@
     <span class="doccomment">/// use std::io::prelude::*;</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// // As used in the impl{} of RiaKV itself</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// fn load&lt;F&gt;(store: &amp;mut RiaKV&lt;F&gt;) -&gt; io::Result&lt;()&gt; where F: Read + Write + Seek {</span>
     <span class="doccomment">///     store.for_each_kv_entry_in_storage(|kv, position| {</span>
     <span class="doccomment">///         if kv.value.len() &gt; 0 {</span>
@@ -843,7 +848,7 @@
     <span class="doccomment">///     })?;</span>
     <span class="doccomment">///</span>
     <span class="doccomment">///    Ok(found)</span>
-    <span class="doccomment">/// } </span>
+    <span class="doccomment">/// }</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">for_each_kv_entry_in_storage</span><span class="op">&lt;</span><span class="ident">Func</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">callback</span>: <span class="ident">Func</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
@@ -908,7 +913,7 @@
         <span class="prelude-val">Ok</span>(<span class="ident">kv</span>)
     }
 
-    <span class="doccomment">/// Get the value for the given key.</span>
+    <span class="doccomment">/// Gets the value for the given key.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Example</span>
     <span class="doccomment">/// ```</span>
@@ -937,7 +942,7 @@
     <span class="doccomment">/// Finds the first `KeyValueEntry{}` corresponding to the given `ByteStr` key.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Note: Since this implementation is an append only, log structured store,</span>
-    <span class="doccomment">/// deleted entries will always also have corresponding entries.</span>
+    <span class="doccomment">/// deleted entries will always have corresponding entries.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Example</span>
     <span class="doccomment">/// ```</span>
@@ -1023,7 +1028,7 @@
     }
 
     <span class="doccomment">/// Deletes the value for the given key by inserting a _tombstone_ entry:</span>
-    <span class="doccomment">/// </span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// # Equivalent implementation</span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// use libriakv::RiaKV;</span>
@@ -1041,7 +1046,6 @@
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Read</span> <span class="op">+</span> <span class="ident">Write</span> <span class="op">+</span> <span class="ident">Seek</span>,
 {
-    
     <span class="doccomment">/// Loads the index from the given object implementing the `Read` trait.</span>
     <span class="doccomment">/// This done by deserializing the contents of the file using</span>
     <span class="doccomment">/// `bincode::deserialize_from(reader)` into a `HashMap&lt;ByteString, u64&gt;`.</span>
