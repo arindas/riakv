@@ -1,4 +1,3 @@
-//!# riakv
 //![![ci-tests](https://github.com/arindas/riakv/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/arindas/riakv/actions/workflows/ci-tests.yml)
 //![![rustdoc](https://github.com/arindas/riakv/actions/workflows/rustdoc.yml/badge.svg)](https://github.com/arindas/riakv/actions/workflows/rustdoc.yml)
 //![![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -7,9 +6,9 @@
 //!
 //!## Features
 //!
-//!- Persitent key value store with a hash table index
+//!- Persistent key value store with a hash table index
 //!- `crc32` checksum validation for every key value pair stored.
-//!- Optionally, persitent index for fast loading
+//!- Optionally, persistent index for fast loading
 //!- Exhaustive, comprehensive tests
 
 use std::io;

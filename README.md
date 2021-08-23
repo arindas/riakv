@@ -7,9 +7,9 @@ Log structured, append only, key value store implementation from [Rust In Action
 
 ## Features
 
-- [x] Persitent key value store with a hash table index
+- [x] Persistent key value store with a hash table index
 - [x] `crc32` checksum validation for every key value pair stored.
-- [x] Optionally, persitent index for fast loading
+- [x] Optionally, persistent index for fast loading
 - [x] Exhaustive, comprehensive tests
 
 ## Design enhancements
