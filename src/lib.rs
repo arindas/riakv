@@ -1,8 +1,8 @@
-//!# `riakv`
+//!# riakv
 //![![ci-tests](https://github.com/arindas/riakv/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/arindas/riakv/actions/workflows/ci-tests.yml)
 //![![rustdoc](https://github.com/arindas/riakv/actions/workflows/rustdoc.yml/badge.svg)](https://github.com/arindas/riakv/actions/workflows/rustdoc.yml)
 //![![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-//! 
+//!
 //!Log structured, append only, key value store implementation from [Rust In Action](https://www.manning.com/books/rust-in-action) with some enhancements.
 //!
 //!## Features
@@ -41,14 +41,17 @@ pub struct KeyValuePair {
 
 /// Generic representation of a key value store in `libriakv`
 /// The underlying storage can be any type with the `Read + Write + Seek` trait bounds.
-/// The `index` attribute is used to maintain a mapping from the key value pairs to the
-/// position at which they are stored in the backing storage file.
+/// The `index` attribute is used to maintain a mapping from keys to the
+/// position in the underlying storage where their corresponding entries are stored.
 #[derive(Debug)]
 pub struct RiaKV<F>
 where
     F: Read + Write + Seek,
 {
+    /// underlying storage
     f: F,
+
+    /// index - storing a mapping from keys to the position where the key value entry is stored
     pub index: HashMap<ByteString, u64>,
 }
 
@@ -70,7 +73,7 @@ impl RiaKV<File> {
     /// use libriakv::RiaKV;
     ///
     /// let storage_path = std::path::Path::new("/path/to/some/file.db");
-    /// 
+    ///
     /// match RiaKV::open_from_file_at_path(storage_path) {
     ///     Ok(opened_store) => {}, // use the opened store
     ///     _ => {} // handle failure
@@ -127,7 +130,7 @@ where
     /// - Read the next (key length + value length) bytes into a bytestring
     /// - Verify that the crc32 checksum of the data Bytestring read matches with the crc32
     /// checksum read
-    /// - Split of the bytestring at key length from the start to obtain the key and the value
+    /// - Split off the bytestring at key length from the start to obtain the key and the value
     /// - Return `KeyValuePair { key, value }`
     ///
     /// # Example
@@ -138,7 +141,7 @@ where
     /// let mut cursor = io::Cursor::new(vec![0; 5000]);
     ///
     /// // .. enter some data into the cursor
-    /// 
+    ///
     /// let maybe_kv = RiaKV::<io::Cursor<Vec<u8>>>::process_record(&mut cursor);
     /// ```
     pub fn process_record<R: Read>(f: &mut R) -> io::Result<KeyValuePair> {
@@ -170,7 +173,7 @@ where
         Ok(KeyValuePair { key, value })
     }
 
-    /// Seeks to the end of the underlying storage file. Any subsequent read should end in EOF.
+    /// Seeks to the end of the underlying storage file. Any subsequent read should end in `EOF`.
     pub fn seek_to_end(&mut self) -> io::Result<u64> {
         self.f.seek(SeekFrom::End(0))
     }
@@ -180,7 +183,7 @@ where
     ///
     /// The key value entries are processed in the following way:
     /// - First we backup the current position of the underlying storage since it would otherwise
-    /// be lost during scanning the entire storafge file
+    /// be lost during scanning the entire storage file
     /// - Next we seek to the start of the storage file
     /// - Now in an infinite loop, during every iteration
     ///     - We seek to the current position
@@ -188,16 +191,16 @@ where
     ///     - If the record read is not an error, we operate on it using the callback
     ///     - In the case of an error
     ///         - For simple EOF we break out of the loop
-    ///         - In the case of any other error, we return Err(err)
+    ///         - In the case of any other error, we return `Err(err)`
     /// - Now if the callback is executed, the return value is used as follows:
-    ///     - For IndexOp::Insert the key value pair is inserted into the index
-    ///     - For IndexOp::Delete the key value pair is deleted from the index if it existed in the
+    ///     - For `IndexOp::Insert` the key value pair is inserted into the index
+    ///     - For `IndexOp::Delete` the key value pair is deleted from the index if it existed in the
     ///     index before
-    ///     - For Index::Nop we do nothing a continue to the next iteration
-    ///     - For Index::End we break out of the loop
+    ///     - For `Index::Nop` we do nothing a continue to the next iteration
+    ///     - For `Index::End` we break out of the loop
     /// - When we exit from the loop, we seek back to the position we saved before entering into
     /// the loop
-    /// - We return Ok(())
+    /// - We return `Ok(())`
     ///
     /// # Example
     ///
@@ -207,7 +210,7 @@ where
     /// use std::io::prelude::*;
     ///
     /// // As used in the impl{} of RiaKV itself
-    /// 
+    ///
     /// fn load<F>(store: &mut RiaKV<F>) -> io::Result<()> where F: Read + Write + Seek {
     ///     store.for_each_kv_entry_in_storage(|kv, position| {
     ///         if kv.value.len() > 0 {
@@ -235,7 +238,7 @@ where
     ///     })?;
     ///
     ///    Ok(found)
-    /// } 
+    /// }
     /// ```
     pub fn for_each_kv_entry_in_storage<Func>(&mut self, mut callback: Func) -> io::Result<()>
     where
@@ -300,7 +303,7 @@ where
         Ok(kv)
     }
 
-    /// Get the value for the given key.
+    /// Gets the value for the given key.
     ///
     /// # Example
     /// ```
@@ -329,7 +332,7 @@ where
     /// Finds the first `KeyValueEntry{}` corresponding to the given `ByteStr` key.
     ///
     /// Note: Since this implementation is an append only, log structured store,
-    /// deleted entries will always also have corresponding entries.
+    /// deleted entries will always have corresponding entries.
     ///
     /// # Example
     /// ```
@@ -415,7 +418,7 @@ where
     }
 
     /// Deletes the value for the given key by inserting a _tombstone_ entry:
-    /// 
+    ///
     /// # Equivalent implementation
     /// ```
     /// use libriakv::RiaKV;
@@ -433,7 +436,6 @@ impl<F> RiaKV<F>
 where
     F: Read + Write + Seek,
 {
-    
     /// Loads the index from the given object implementing the `Read` trait.
     /// This done by deserializing the contents of the file using
     /// `bincode::deserialize_from(reader)` into a `HashMap<ByteString, u64>`.
